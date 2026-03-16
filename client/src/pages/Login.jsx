@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react'
 import assets from '../assets/assets'
-import { AuthContext } from '../../context/AuthContext'
+import { AuthContext } from '../../context/authContextStore'
 
 
 
@@ -71,7 +71,7 @@ const LoginPage = () => {
           </textarea>
         )}
 
-        <button type='submit' className='py-3 bg-gradient-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer'>
+        <button type='submit' className='py-3 bg-linear-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer'>
           {currState === "Sign up" ? "Create Account" : "Login Now"}
         </button>
 
