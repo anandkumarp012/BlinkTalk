@@ -5,8 +5,17 @@ import { io } from 'socket.io-client';
 import { AuthContext } from './authContextStore';
 
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+const rawBackendUrl = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').trim();
+const cleanedBackendUrl = rawBackendUrl.replace(/^['"]|['"]$/g, '');
+const backendUrl = /^https?:\/\//i.test(cleanedBackendUrl) ? cleanedBackendUrl : `http://${cleanedBackendUrl}`;
 axios.defaults.baseURL = backendUrl;
+
+const getErrorMessage = (error) => {
+    if (error?.code === 'ERR_NETWORK') {
+        return `Cannot reach server at ${backendUrl}. Start backend (server) and try again.`;
+    }
+    return error?.response?.data?.message || error?.message || 'Something went wrong';
+};
 
 export const AuthProvider = ({children}) => {
     const [token, setToken] = React.useState(localStorage.getItem('token'));
@@ -29,7 +38,7 @@ export const AuthProvider = ({children}) => {
                 toast.error(data.message);
             }
         } catch (error){
-            toast.error(error.message);
+            toast.error(getErrorMessage(error));
         }
     }
 
@@ -62,7 +71,7 @@ export const AuthProvider = ({children}) => {
             }
         }
         catch (error) {
-            toast.error(error.message);
+            toast.error(getErrorMessage(error));
         }
     }
 
@@ -95,9 +104,15 @@ export const AuthProvider = ({children}) => {
                 if (data.success) {
                     setAuthUser(data.user);
                     connectSocket(data.user);
+                } else {
+                    localStorage.removeItem('token');
+                    setToken(null);
                 }
             } catch (error) {
-                toast.error(error.message);
+                localStorage.removeItem('token');
+                setToken(null);
+                setAuthUser(null);
+                toast.error(getErrorMessage(error));
             }
         };
 

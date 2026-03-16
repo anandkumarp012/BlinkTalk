@@ -1,13 +1,25 @@
-import React, { useContext } from "react";
-import assets, { userDummyData } from "../assets/assets";
+import React, { useContext, useEffect, useState } from "react";
+import assets from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../../context/authContextStore';
+import { ChatContext } from "../../context/ChatContext";
 
-const SideBar = ({ selectedUser, setSelectedUser }) => {
+const SideBar = () => {
+  const { getUsers, users, setSelectedUser, selectedUser, unseenMessages, setUnseenMessages } = useContext(ChatContext);
 
-  const {logout} = useContext(AuthContext);
+  const { logout, onlineUsers } = useContext(AuthContext);
+
+  const [input, setInput] = useState("");
 
   const navigate = useNavigate();
+
+  const filteredUsers = input
+    ? (users || []).filter((user) => user.fullName.toLowerCase().includes(input.toLowerCase()))
+    : (users || []);
+
+  useEffect(() => {
+    getUsers();
+  }, [onlineUsers, getUsers]);
 
   return (
     <div
@@ -45,7 +57,7 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
         {/* Search */}
         <div className="bg-[#282142] rounded-full flex items-center gap-2 py-2 px-4 mt-5">
           <img src={assets.search_icon} alt="search" className="w-3" />
-          <input
+          <input onChange={(e)=>setInput(e.target.value)}
             type="text"
             className="bg-transparent outline-none text-white text-xs placeholder-[#c8c8c8] flex-1"
             placeholder="Search user.."
@@ -55,10 +67,13 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
 
       {/* Users */}
       <div className="flex flex-col">
-        {userDummyData.map((user, index) => (
+        {filteredUsers.map((user, index) => (
           <div
             key={index}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => {
+              setSelectedUser(user);
+              setUnseenMessages((prev) => ({ ...prev, [user._id]: 0 }));
+            }}
             className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${
               selectedUser?._id === user._id
                 ? "bg-[#282142]/50"
@@ -68,24 +83,24 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
             <img
               src={user?.profilePic || assets.avatar_icon}
               alt="profile"
-              className="w-[35px] aspect-square rounded-full"
+              className="w-9 aspect-square rounded-full"
             />
 
             <div className="flex flex-col leading-5">
               <p>{user.fullName}</p>
 
-              {index < 2 ? (
+              {onlineUsers.includes(user._id) ? (
                 <span className="text-green-400 text-xs">Online</span>
               ) : (
                 <span className="text-gray-400 text-xs">Offline</span>
               )}
             </div>
 
-            {index > 2 && (
+            {unseenMessages[user._id] > 0 && 
               <p className="absolute top-3 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50">
-                2
+                {unseenMessages[user._id]}
               </p>
-            )}
+            }
           </div>
         ))}
       </div>
