@@ -5,9 +5,22 @@ import { io } from 'socket.io-client';
 import { AuthContext } from './authContextStore';
 
 
-const rawBackendUrl = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').trim();
-const cleanedBackendUrl = rawBackendUrl.replace(/^['"]|['"]$/g, '');
-const backendUrl = /^https?:\/\//i.test(cleanedBackendUrl) ? cleanedBackendUrl : `http://${cleanedBackendUrl}`;
+const resolveBackendUrl = () => {
+    const rawBackendUrl = (import.meta.env.VITE_BACKEND_URL || '').trim();
+    const cleanedBackendUrl = rawBackendUrl.replace(/^['"]|['"]$/g, '');
+
+    if (cleanedBackendUrl) {
+        return /^https?:\/\//i.test(cleanedBackendUrl) ? cleanedBackendUrl : `http://${cleanedBackendUrl}`;
+    }
+
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+        return window.location.origin;
+    }
+
+    return 'http://localhost:5000';
+};
+
+const backendUrl = resolveBackendUrl();
 axios.defaults.baseURL = backendUrl;
 
 const getErrorMessage = (error) => {
