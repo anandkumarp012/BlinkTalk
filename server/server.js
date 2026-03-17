@@ -37,7 +37,12 @@ io.on("connection", (socket)=>{
 
 
 //  Middleware
-app.use(cors());
+// Temporarily allow all origins for debugging, or define the exact production frontend domains (Vercel, Netlify)
+app.use(cors({
+    origin: process.env.CLIENT_URL || true, // 'true' reflects the request origin, allowing all temporarily
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+}));
 app.use(express.json({ limit: '5mb' }));
 
 app.use("/api/status", (req, res) => res.send("Server is live"));

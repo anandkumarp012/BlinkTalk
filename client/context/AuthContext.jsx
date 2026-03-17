@@ -6,17 +6,20 @@ import { AuthContext } from './authContextStore';
 
 
 const resolveBackendUrl = () => {
-    const rawBackendUrl = (import.meta.env.VITE_BACKEND_URL || '').trim();
-    const cleanedBackendUrl = rawBackendUrl.replace(/^['"]|['"]$/g, '');
-
-    if (cleanedBackendUrl) {
-        return /^https?:\/\//i.test(cleanedBackendUrl) ? cleanedBackendUrl : `http://${cleanedBackendUrl}`;
+    // 1. Use the Vite environment variable if available (Vercel, Netlify, Render set this)
+    // Note: Since this is a Vite project, we use import.meta.env.VITE_* instead of process.env.REACT_APP_*
+    // Provide your Render backend URL here for production, e.g., 'https://mybackend.onrender.com'
+    const envUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL;
+    if (envUrl) {
+        return envUrl.trim().replace(/\/$/, ""); // Remove trailing slash if present
     }
 
+    // 2. Relative URLs option: If hosted on the same domain (e.g. Railway full-stack deployment)
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
         return window.location.origin;
     }
 
+    // 3. Fallback for local development
     return 'http://localhost:5000';
 };
 
