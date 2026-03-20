@@ -8,7 +8,7 @@ import { AuthContext } from '../context/authContextStore'
 import assets from './assets/assets'
 
 const App = () => {
-const { authUser } = useContext(AuthContext);
+const { authUser } = useContext(AuthContext)
 
   return (
     <div className="bg-contain" style={{ backgroundImage: `url(${assets.bgImage})` }}>
