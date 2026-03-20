@@ -3,12 +3,16 @@ import assets from '../assets/assets'
 import { formateMessageTime } from '../lib/utils'
 import { ChatContext } from '../../context/ChatContext'
 import { AuthContext } from '../../context/authContextStore'
+import { CalendarIcon } from 'lucide-react'
+import { Calendar } from './ui/calendar'
 
 const ChatContainer = () => {
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } = useContext(ChatContext)
   const { authUser, onlineUsers } = useContext(AuthContext)
   const scrollEnd = React.useRef()
   const [input, setInput] = useState('')
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(null)
 
   useEffect(() => {
     if (selectedUser?._id) {
@@ -21,9 +25,16 @@ const ChatContainer = () => {
   }, [messages])
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return
-    await sendMessage({ text: input.trim() })
+    if (!input.trim() && !selectedDate) return
+    let text = input.trim();
+    if (selectedDate) {
+      const dateStr = selectedDate.toLocaleDateString();
+      text = `[Scheduled for ${dateStr}]: ` + text;
+    }
+    await sendMessage({ text })
     setInput('')
+    setSelectedDate(null)
+    setShowCalendar(false)
   }
 
   const handleSendImage = async (e) => {
@@ -108,6 +119,16 @@ const ChatContainer = () => {
         <div ref={scrollEnd} />
 
         <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
+          {showCalendar && (
+            <div className="absolute bottom-16 right-4 bg-white text-black p-2 rounded-lg shadow-lg z-50">
+              <Calendar 
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="rounded-md"
+              />
+            </div>
+          )}
           <div className='flex-1 flex items-center bg-gray-100/12 px-3 rounded-full'>
             <input
               onChange={(e) => setInput(e.target.value)}
@@ -119,9 +140,24 @@ const ChatContainer = () => {
                 }
               }}
               type='text'
-              placeholder='Send a message'
-              className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400'
+              placeholder={selectedDate ? `Scheduled for ${selectedDate.toLocaleDateString()}` : 'Send a message'}
+              className='flex-1 text-sm p-3 border-none bg-transparent outline-none text-white placeholder-gray-400'
             />
+            {selectedDate && (
+              <button 
+                onClick={() => setSelectedDate(null)} 
+                className="text-xs text-gray-400 hover:text-white mr-2"
+              >
+                Clear Date
+              </button>
+            )}
+            <button
+               onClick={() => setShowCalendar(!showCalendar)}
+               className="mr-3 text-gray-400 hover:text-white transition-colors"
+               title="Schedule message"
+            >
+               <CalendarIcon className="w-5 h-5 cursor-pointer" />
+            </button>
             <input
               onChange={handleSendImage}
               type='file'
