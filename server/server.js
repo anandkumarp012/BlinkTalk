@@ -53,5 +53,29 @@ app.use("/api/messages", messageRouter);
 // connect to MongoDB
 await connectDB();
 
-const PORT = process.env.PORT || 5000;
+const rawPort = process.env.PORT ?? "5000";
+const PORT = Number.parseInt(rawPort, 10);
+
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+    console.error(
+        `Invalid PORT value: "${rawPort}". PORT must be a number between 1 and 65535. ` +
+        `On Render, do not set PORT manually to a URL. Use CLIENT_URL for your frontend domain.`
+    );
+    process.exit(1);
+}
+
+server.on("error", (err) => {
+    if (err.code === "EACCES") {
+        console.error(
+            `Port ${PORT} requires elevated privileges or is invalid for this environment. ` +
+            `If deploying to Render, remove any manual PORT setting and let Render provide it.`
+        );
+    } else if (err.code === "EADDRINUSE") {
+        console.error(`Port ${PORT} is already in use.`);
+    } else {
+        console.error("Server failed to start:", err);
+    }
+    process.exit(1);
+});
+
 server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
